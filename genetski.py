@@ -3,115 +3,115 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-def funkcija(x,y):
+def function(x,y):
     return 3*x**2 + y**4
 
-def generisi_jedinku():
-    x = random.uniform(-10,10)
+def generate_individual():
+    x = random.uniform(-10, 10)
     y = random.uniform(-10, 10)
-    return [x,y,funkcija(x,y)]
+    return [x,y,function(x,y)]
 
-def generisi_pocetnu_populaciju(velicina_populacije):
-    pop = [[0,0,0]]*velicina_populacije
-    for i in range(0,velicina_populacije):
-        pop[i] = generisi_jedinku()
-    return pop
+def generate_initial_population(size_of_population):
+    population = [[0,0,0]]*size_of_population
+    for i in range(0,size_of_population):
+        population[i] = generate_individual()
+    return population
 
-def turnirska_selekcija(populacija,K):
-    k_torka = random.sample(populacija,K)
+def tournament_selection(population,K):
+    k_individuals = random.sample(population,K)
     a = [-1]*K
     for i in range(0,K-1):
-        a[i] = k_torka[i][2]
-    najbolji_indeks = np.argmin(a)
-    return k_torka[najbolji_indeks]
+        a[i] = k_individuals[i][2]
+    best_index = np.argmin(a)
+    return k_individuals[best_index]
 
-def kum_sum(a):
-    ks = []
+def cumulative_sum(a):
+    c_s = []
     j = 0
     for i in range(0, len(a)):
         j += a[i]
-        ks.append(j)
-    return ks
+        c_s.append(j)
+    return c_s
 
-def prosek_generacije(populacija):
-    a = [0]*len(populacija)
-    for i in range(len(populacija)):
-        a[i] = populacija[i][2]
+def generation_average(population):
+    a = [0]*len(population)
+    for i in range(len(population)):
+        a[i] = population[i][2]
     return np.sum(a)/len(a)
 
-def ruletska_selekcija(populacija):
-    a = [0]*len(populacija)
-    for i in range(0,len(populacija)):
-        a[i] = 1/(populacija[i][2])
+def roulette_selection(population):
+    a = [0]*len(population)
+    for i in range(0,len(population)):
+        a[i] = 1/(population[i][2])
     population_fitness = np.sum(a)
-    kumulativna_suma = kum_sum(a)
-    r = random.uniform(0,population_fitness)
+    cum_sum = cumulative_sum(a)
+    r = random.uniform(0,float(population_fitness))
     for i in range(len(a)):
-        if r < kumulativna_suma[i]:
-            return populacija[i]
+        if r < cum_sum[i]:
+            return population[i]
 
-def ukrstanje(r1,r2):
-    d1 = [r1[0], r2[1], funkcija(r1[0], r2[1])]
-    d2 = [r1[1], r2[0], funkcija(r1[1], r2[0])]
-    return d1,d2
+def crossover(parent1,parent2):
+    child1 = [parent1[0], parent2[1], function(parent1[0], parent2[1])]
+    child2 = [parent1[1], parent2[0], function(parent1[1], parent2[0])]
+    return child1,child2
 
-def elitizam(populacija):
-    a = [0]*len(populacija)
-    for i in range(len(populacija)):
-        a[i] = populacija[i][2]
-    index_prvi = np.argmin(a)
-    a[index_prvi] = 1000000
-    index_drugi = np.argmin(a)
-    return index_prvi, index_drugi
+def elitism(population):
+    a = [0]*len(population)
+    for i in range(len(population)):
+        a[i] = population[i][2]
+    index_of_first = np.argmin(a)
+    a[index_of_first] = 1000000
+    index_of_second = np.argmin(a)
+    return index_of_first, index_of_second
 
-def mutacija(jedinka,stepen):
-    for i in range(len(jedinka)-2):
-        s = random.random()
-        if s < stepen:
-            jedinka[i]  = jedinka[i] + random.uniform(-1,1)
+def mutation(individual,rate):
+    for i in range(len(individual)-2):
+        random_number = random.random()
+        if random_number < rate:
+            individual[i]  = individual[i] + random.uniform(-1,1)
 
-def genetski_algoritam(selekcija ,velicina_populacije=20, broj_generacija=100,K=3, stepen_mutacije=0.2):
-    populacija = generisi_pocetnu_populaciju(velicina_populacije)
-    fitness_najbolje_jedinke = []*broj_generacija
-    prosecan_fitness_generacije = []
-    prosecan_fitness_generacije.append(prosek_generacije(populacija))
-    el1, el2 = elitizam(populacija)
-    fitness_najbolje_jedinke.append(populacija[el1][2])
-    print("Pocnetna opulacija: ")
-    for i in range(0,len(populacija)):
-        print(populacija[i])
-    for i in range(1,broj_generacija-1):
-        nova_populacija = []*velicina_populacije
-        el1,el2 = elitizam(populacija)
-        fitness_najbolje_jedinke.append(populacija[el1][2])
-        nova_populacija.append(populacija[el1])
-        nova_populacija.append(populacija[el2])
-        while len(nova_populacija) < len(populacija):
-            if selekcija == "turnir":
-                roditelj1 = turnirska_selekcija(populacija, K)
-                roditelj2 = turnirska_selekcija(populacija, K)
+def algorithm(selection ,size_of_population=20, number_of_generations=100,K=3, mutation_rate=0.2, err=0.0001):
+    population = generate_initial_population(size_of_population)
+    best_individual_fitness = []*number_of_generations
+    average_generation_fitness = []
+    average_generation_fitness.append(generation_average(population))
+    el1, el2 = elitism(population)
+    best_individual_fitness.append(population[el1][2])
+    print("Initial population: ")
+    for i in range(0,len(population)):
+        print(population[i])
+    for i in range(1,number_of_generations-1):
+        new_population = []*size_of_population
+        el1,el2 = elitism(population)
+        best_individual_fitness.append(population[el1][2])
+        new_population.append(population[el1])
+        new_population.append(population[el2])
+        while len(new_population) < len(population):
+            if selection == "tournament":
+                parent1 = tournament_selection(population, K)
+                parent2 = tournament_selection(population, K)
             else:
-                roditelj1 = ruletska_selekcija(populacija)
-                roditelj2 = ruletska_selekcija(populacija)
-            d1,d2 = ukrstanje(roditelj1,roditelj2)
-            mutacija(d1,stepen_mutacije)
-            mutacija(d2, stepen_mutacije)
-            nova_populacija.append(d1)
-            nova_populacija.append(d2)
-        prosecan_fitness_generacije.append(prosek_generacije(populacija))
-        populacija = nova_populacija
-        print(" -------------- Populacija: " + str(i) + '------------------')
-        for j in range(0,len(populacija)):
-            print(populacija[j])
-        if i > 7:
-            if abs(fitness_najbolje_jedinke[i] - fitness_najbolje_jedinke[i-6]) < 0.001:
-                print(fitness_najbolje_jedinke)
-                return fitness_najbolje_jedinke, prosecan_fitness_generacije
-    print(fitness_najbolje_jedinke)
-    return fitness_najbolje_jedinke, prosecan_fitness_generacije
+                parent1 = roulette_selection(population)
+                parent2 = roulette_selection(population)
+            child1,child2 = crossover(parent1,parent2)
+            mutation(child1, mutation_rate)
+            mutation(child2, mutation_rate)
+            new_population.append(child1)
+            new_population.append(child2)
+        average_generation_fitness.append(generation_average(population))
+        population = new_population
+        print(" -------------- Population: " + str(i) + '------------------')
+        for j in range(0,len(population)):
+            print(population[j])
+        if i > 11:
+            if abs(best_individual_fitness[i] - best_individual_fitness[i-10]) < err:
+                print(best_individual_fitness)
+                return best_individual_fitness, average_generation_fitness
+    print(best_individual_fitness)
+    return best_individual_fitness, average_generation_fitness
 
 
-grafik1, grafik2 = genetski_algoritam("turnir", broj_generacija=30)
-plt.plot(grafik1)
-#plt.plot(grafik2)
+best_idividuals_fitness, generation_average_fitness = algorithm("tournament", number_of_generations=50)
+plt.plot(best_idividuals_fitness)
+plt.plot(generation_average_fitness)
 plt.show()
